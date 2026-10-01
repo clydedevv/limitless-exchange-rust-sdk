@@ -11,7 +11,7 @@ All notable changes to the Limitless Exchange Rust SDK will be documented in thi
 - `PortfolioPositionsResponse::points` / `accumulative_points` are now `Option<f64>` and accept both the decimal string and the JSON number `0` the server sends for profiles without a points row (previously `Option<String>`, which failed on the number and took `get_positions()` down).
 - `NewPriceData` now decodes both `newPriceData` shapes: the initial per-market snapshot (top-level `marketAddress`, single `updatedPrices` object) and streamed updates (no top-level `marketAddress`, `updatedPrices` array). `market_address` is `Option<String>`, `AmmPriceEntry::market_id` is `Option<i32>`, and `updated_prices` stays a `Vec`.
 - `MarketMetadata::fee` is now `Option<bool>` (the API allows `null` and empty metadata), and every other metadata key (sports and venue fields) is preserved in the new `extra` map instead of being dropped.
-- Cancel-replace response types (`CancelReplaceCancelResult`, `CancelReplaceSuccessData`, `CancelReplaceNotAttempted`, `CancelReplaceReplacementResult`) no longer use `deny_unknown_fields`, so additive server fields do not fail the decode. They were the only strict structs in the crate.
+- Cancel-replace response types (`CancelReplaceCancelResult`, `CancelReplaceSuccessData`, `CancelReplaceNotAttempted`, `CancelReplaceReplacementResult`) no longer use `deny_unknown_fields`, so additive server fields do not fail the decode. They were the only strict response types in the crate; the request-side `CancelTarget` keeps `deny_unknown_fields`.
 
 ### Changed
 
