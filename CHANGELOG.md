@@ -2,6 +2,27 @@
 
 All notable changes to the Limitless Exchange Rust SDK will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- `PriceOracleMetadata::pyth_address` is now `Option<String>` (with `#[serde(default)]`). Hourly and daily up-or-down replicas charted from Binance or Pyth Pro send `pythAddress: null`, which failed deserialization of the whole `Market` and therefore of the default `get_active_markets(None)` page and of `get_market(slug)` for those markets.
+- `UserOrder` (`GET /markets/{slug}/user-orders`) now matches the matching-engine row the server sends: `id`, `owner_id`, `market_id` (text), `token`, `order_type` (wire `type`), `status`, `side`, decimal-string `maker_amount` / `taker_amount` / `price` / `original_size` / `remaining_size`, `created_at`, and optional `client_order_id`. The previous signed-order shape (`signature_type`, `salt`, `maker`, `signer`, `taker`, `token_id`, `fee_rate_bps`, `nonce`, `signature`, `filled_size`, numeric `market_id`) never deserialized a non-empty response.
+- `PortfolioPositionsResponse::points` / `accumulative_points` are now `Option<f64>` and accept both the decimal string and the JSON number `0` the server sends for profiles without a points row (previously `Option<String>`, which failed on the number and took `get_positions()` down).
+- `NewPriceData` now decodes both `newPriceData` shapes: the initial per-market snapshot (top-level `marketAddress`, single `updatedPrices` object) and streamed updates (no top-level `marketAddress`, `updatedPrices` array). `market_address` is `Option<String>`, `AmmPriceEntry::market_id` is `Option<i32>`, and `updated_prices` stays a `Vec`.
+- `MarketMetadata::fee` is now `Option<bool>` (the API allows `null` and empty metadata), and every other metadata key (sports and venue fields) is preserved in the new `extra` map instead of being dropped.
+- Cancel-replace response types (`CancelReplaceCancelResult`, `CancelReplaceSuccessData`, `CancelReplaceNotAttempted`, `CancelReplaceReplacementResult`) no longer use `deny_unknown_fields`, so additive server fields do not fail the decode. They were the only strict structs in the crate.
+
+### Changed
+
+- `ActiveMarketsSortBy::Liquidity` is replaced by `ActiveMarketsSortBy::Trending` (`sortBy=trending`). The server never accepted `liquidity` (`GET /markets/active?sortBy=liquidity` returns HTTP 400); its sort options are `ending_soon`, `high_value`, `lp_rewards`, `newest` and `trending`.
+
+### Added
+
+- `MarketSettings::{taker_delay_ms, creator_fee_pct, effective_daily_reward, current_rewards_multiplier}`, matching the keys every `/markets/active` row carries. `taker_delay_ms` is the only way to know ahead of time that a taker order will come back `DELAYED`.
+- `PriceOracleMetadata::chart_source` (`chainlink`, `pyth`, `pyth-pro` or `binance`).
+- `OrderBook::midpoint` (the raw midpoint next to `adjusted_midpoint`).
+
 ## [1.1.0]
 
 ### Added
